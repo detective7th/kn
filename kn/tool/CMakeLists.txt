@@ -1,0 +1,42 @@
+cmake_minimum_required (VERSION 3.15)
+
+project(tool)
+find_package(GFLAGS)
+find_package(FOLLY)
+find_package(date)
+find_package(prometheus-cpp)
+
+set (CMAKE_VERBOSE_MAKEFILE ON)
+set (CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Wall -g -ggdb")
+set (CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -Wall -O2 -Wall")
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
+set (CMAKE_REQUIRED_FLAGS -std=c++20)
+
+set(TARGET tool)
+set(VERSION_MAJOR 0)
+set(VERSION_MINOR 0)
+set(VERSION_REVISION 1)
+set(VERSION_BUILD 0)
+
+message(${PROJECT_SOURCE_DIR})
+message(${CMAKE_CURRENT_BINARY_DIR})
+message(${CMAKE_CURRENT_SOURCE_DIR})
+
+set(CMAKE_INSTALL_PREFIX "/usr/local")
+
+set(INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+set(INSTALL_INC_DIR ${CMAKE_INSTALL_PREFIX}/include/kn/tool)
+
+set(SHARED_LIBS ${SHARED_LIBS} pthread tz gflags prometheus-cpp-core prometheus-cpp-push)
+
+if (CMAKE_BUILD_TYPE STREQUAL Debug OR (CMAKE_BUILD_TYPE STREQUAL DEBUG))
+  add_definitions(-DDDEBUG)
+endif()
+
+configure_file(
+  "${PROJECT_SOURCE_DIR}/config.h.in"
+  "${PROJECT_SOURCE_DIR}/src/config.h"
+  )
+
+file (GLOB HEAD_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
+install (FILES ${HEAD_FILES} DESTINATION ${INSTALL_INC_DIR})
