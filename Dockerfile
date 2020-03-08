@@ -58,4 +58,3 @@ WORKDIR /data/kn
 RUN mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j $(nproc) && make install && ldconfig
 
 #RUN rm -rf /data/3rd
-CMD git --version
