@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 3.15)
 
 project(net)
+#find_package(g3logger)
 find_package(FOLLY)
-find_package(g3logger)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -Wall -g -ggdb")
