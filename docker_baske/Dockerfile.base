@@ -54,4 +54,5 @@ RUN make -j $(nproc) && make install \
     && cp xxh3.h /usr/local/include/ \
     && ldconfig
 
+WORKDIR /
 RUN rm -rf /data/
