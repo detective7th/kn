@@ -49,6 +49,7 @@ RUN mkdir build && cd build && cmake .. -DBUILD_SHARED_LIBS=ON -DBUILD_TZ_LIB=ON
 WORKDIR /data/3rd
 RUN git clone https://github.com/Cyan4973/xxHash.git
 WORKDIR /data/3rd/xxHash
-RUN make -j $(nproc) && make install && ldconfig
+RUN make -j $(nproc) && make install && mkdir -p /usr/local/include/xxHash && \
+    mv /usr/local/include/xxh*.h /usr/local/include/xxHash/ && cp ./*.c /usr/local/include/xxHash/ && ldconfig
 
 RUN rm -rf /data/

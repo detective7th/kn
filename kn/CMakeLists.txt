@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.15)
 
 project(kn)
 find_package(GFLAGS)
+find_package(Boost)
 find_package(FOLLY)
 find_package(date)
 #find_package(prometheus-cpp)

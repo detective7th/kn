@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.15)
 
 project(net)
 #find_package(g3logger)
+find_package(Boost)
 find_package(FOLLY)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
