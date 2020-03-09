@@ -19,6 +19,7 @@
 
 #pragma once
 //#include <g3log/g3log.hpp>
+#include <folly/Likely.h>
 #include <kn/log/logger.h>
 #include <boost/beast/core.hpp>
 #include <boost/beast/ssl.hpp>
@@ -391,9 +392,9 @@ public:
                     } while (stream()->is_open());
                     goto START;
                 }
-                else if (UNLIKEYLY(CtrlReSub == ctrl))
+                else if (UNLIKELY(CtrlReSub == ctrl))
                 {
-                    UnSub(yeild, ec)
+                    UnSub(yield, ec);
                     Init();
                     Sub(yield, ec);
                 }
@@ -410,7 +411,7 @@ protected:
     boost::beast::flat_buffer buffer_;
 };
 
-/*
+
 template<>
 class Conn<false> : public StreamEntry<WsStream<WsStreamTCP>>
 {
@@ -595,7 +596,7 @@ public:
 protected:
     boost::beast::flat_buffer buffer_;
 };
-*/
+
 
 } // ws
 } // net
