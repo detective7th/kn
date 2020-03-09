@@ -58,7 +58,7 @@ template<class TimePoint, class STR>
 std::errc StrUnixTsToTP(const STR& str, TimePoint& ts)
 {
     uint64_t ts_num;
-    auto errc = flash::tool::StrToNum(str, ts_num);
+    auto errc = StrToNum(str, ts_num);
     if (0 == static_cast<int>(errc))
     {
         switch (str.size())
