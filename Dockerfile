@@ -7,4 +7,5 @@ ADD kn /data/kn
 WORKDIR /data/kn
 RUN mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=$build_type && make -j $(nproc) && make install && ldconfig
 
+WORKDIR /
 RUN if [ "$build_type" == "Release" ]; then rm -rf /data; fi
