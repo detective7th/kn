@@ -1,6 +1,9 @@
 FROM archlinux
 MAINTAINER kid.Novalis
 
+ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:$LD_LIBRARY_PATH
+ENV PATH=/usr/local/bin:/usr/bin:$PATH
+
 RUN pacman -Syyu --noconfirm
 RUN pacman -S --noconfirm git gcc cmake protobuf boost boost-libs double-conversion google-glog snappy jemalloc libaio \
     	      		  libsodium libunwind libdwarf libevent gmock rapidjson librdkafka gtest gflags fmt make
