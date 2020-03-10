@@ -26,6 +26,7 @@ namespace kn
 {
 namespace tool
 {
+
 namespace
 {
 
@@ -35,7 +36,7 @@ int SetMaxNice()
     int ret = nice(-20);
     if (errno)
     {
-        LOG(FATAL) << "SetMaxNice Failed|" << errno << "|" << strerror(errno);
+        LOG(ERROR) << "SetMaxNice Failed|" << errno << "|" << strerror(errno);
     }
     return ret;
 }
