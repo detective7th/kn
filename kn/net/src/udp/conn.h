@@ -63,11 +63,11 @@ public:
                                         ep_, boost::asio::socket_base::message_end_of_record, ec);
         if (UNLIKELY(0 != ec.value()))
         {
-            LOG(ERROR) << "UDP|Send|" << ep_ << '|' << sended << "|" << data.size() << "|" << ec << "|" << ec.message();
+            G3LOG(ERROR) << "UDP|Send|" << ep_ << '|' << sended << "|" << data.size() << "|" << ec << "|" << ec.message();
         }
         else
         {
-            // LOG(DEBUG) << "UDP|Send|" << ep_ << "|" << sended;
+            // G3LOG(DEBUG) << "UDP|Send|" << ep_ << "|" << sended;
         }
         return sended;
     }
@@ -78,11 +78,11 @@ public:
                                         ep_, boost::asio::socket_base::message_end_of_record, ec);
         if (UNLIKELY(0 != ec.value()))
         {
-            LOG(ERROR) << "UDP|Send|" << ep_ << '|' << sended << "|" << send_size << "|" << ec << "|" << ec.message();
+            G3LOG(ERROR) << "UDP|Send|" << ep_ << '|' << sended << "|" << send_size << "|" << ec << "|" << ec.message();
         }
         else
         {
-            // LOG(DEBUG) << "UDP|Send|" << ep_ << "|" << sended;
+            // G3LOG(DEBUG) << "UDP|Send|" << ep_ << "|" << sended;
         }
         return sended;
     }

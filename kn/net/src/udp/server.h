@@ -81,7 +81,7 @@ protected:
         }
         else
         {
-            LOG(ERROR) << "RecvError|" << ec << "|" << ec.message();
+            G3LOG(ERROR) << "RecvError|" << ec << "|" << ec.message();
         }
     }
 

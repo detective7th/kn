@@ -56,7 +56,7 @@ public:
             std::this_thread::sleep_for(std::chrono::seconds(3));
         } while(ec);
 
-        LOG(INFO) <<  "Resolve|" << results_.size();
+        G3LOG(INFO) <<  "Resolve|" << results_.size();
     }
 
     virtual ~ParasitiferBase()

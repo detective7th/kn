@@ -77,9 +77,17 @@ protected:
 #endif // DDEBUG
 };
 
-} // logger
+} // log
 } // kn
 
 using namespace kn::log;
+
+// LOG(level) is the API for the stream log
+#define G3LOG(level) if(!g3::logLevel(level)) {} else INTERNAL_LOG_MESSAGE(level).stream()
+
+
+// 'Conditional' stream log
+#define G3LOG_IF(level, boolean_expression)  \
+    if (false == (boolean_expression) || !g3::logLevel(level)) {} else INTERNAL_LOG_MESSAGE(level).stream()
 
 #endif // _KN_LOG_LOGGER_H_

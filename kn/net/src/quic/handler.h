@@ -50,40 +50,40 @@ public:
 
     void onNewBidirectionalStream(::quic::StreamId id) noexcept override
     {
-        LOG(INFO) << "Got bidirectional stream id=" << id;
+        G3LOG(INFO) << "Got bidirectional stream id=" << id;
         socket_->setReadCallback(id, this);
     }
 
     void onNewUnidirectionalStream(::quic::StreamId id) noexcept override
     {
-        LOG(INFO) << "Got unidirectional stream id=" << id;
+        G3LOG(INFO) << "Got unidirectional stream id=" << id;
         socket_->setReadCallback(id, this);
     }
 
     void onStopSending(::quic::StreamId id, ::quic::ApplicationErrorCode error) noexcept override
     {
-        LOG(INFO) << "Got StopSending stream id=" << id << " error=" << error;
+        G3LOG(INFO) << "Got StopSending stream id=" << id << " error=" << error;
     }
 
     void onConnectionEnd() noexcept override
     {
-        LOG(INFO) << "Socket closed";
+        G3LOG(INFO) << "Socket closed";
     }
 
     void onConnectionError(std::pair<::quic::QuicErrorCode, std::string> error) noexcept override
     {
-        LOG(ERROR) << "Socket error=" << ::quic::toString(error.first);
+        G3LOG(ERROR) << "Socket error=" << ::quic::toString(error.first);
     }
 
     void readAvailable(::quic::StreamId id) noexcept override
     {
-        LOG(INFO) << "read available for stream id=" << id;
+        G3LOG(INFO) << "read available for stream id=" << id;
     }
 
     void readError(::quic::StreamId id, std::pair<::quic::QuicErrorCode,
                    folly::Optional<folly::StringPiece>> error) noexcept override
     {
-        LOG(ERROR) << "Got read error on stream=" << id
+        G3LOG(ERROR) << "Got read error on stream=" << id
                    << " error=" << toString(error);
         // A read error only terminates the ingress portion of the stream state.
         // Your application should probably terminate the egress portion via
@@ -92,13 +92,13 @@ public:
 
     void onStreamWriteReady(::quic::StreamId id, uint64_t maxToSend) noexcept override
     {
-        LOG(INFO) << "socket is write ready with maxToSend=" << maxToSend;
+        G3LOG(INFO) << "socket is write ready with maxToSend=" << maxToSend;
     }
 
     void onStreamWriteError(::quic::StreamId id,
                             std::pair<::quic::QuicErrorCode, folly::Optional<folly::StringPiece>> error) noexcept override
     {
-        LOG(ERROR) << "write error with stream=" << id
+        G3LOG(ERROR) << "write error with stream=" << id
                    << " error=" << toString(error);
     }
 

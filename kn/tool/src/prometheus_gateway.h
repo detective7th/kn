@@ -22,6 +22,7 @@
 #pragma once
 //#include <prometheus/exposer.h>
 #include <prometheus/gateway.h>
+#include <kn/log/logger.h>
 #include "thread.h"
 
 namespace kn

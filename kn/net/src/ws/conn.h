@@ -113,17 +113,17 @@ public:
         stream()->async_close(cr, yield[ec]);
         if (ec)
         {
-            LOG(ERROR) << "Close|" << endpoint() << "|" << uint16_t(cr) << "|" << ec << "|" << ec.message();
+            G3LOG(ERROR) << "Close|" << endpoint() << "|" << uint16_t(cr) << "|" << ec << "|" << ec.message();
             boost::beast::get_lowest_layer(*stream()).close();
         }
-        else LOG(INFO) << "Close|" << endpoint() << "|" << uint16_t(cr);
+        else G3LOG(INFO) << "Close|" << endpoint() << "|" << uint16_t(cr);
     }
 
     void Close(boost::beast::error_code& ec)
     {
         stream()->close(boost::beast::websocket::close_code::normal);
-        if (ec) LOG(ERROR) << "Close|" << endpoint() << "|" << ec << "|" << ec.message();
-        else LOG(INFO) << "Close|" << endpoint();
+        if (ec) G3LOG(ERROR) << "Close|" << endpoint() << "|" << ec << "|" << ec.message();
+        else G3LOG(INFO) << "Close|" << endpoint();
     }
 
     void UnSub(boost::asio::yield_context& yield, boost::beast::error_code& ec)
@@ -140,11 +140,11 @@ public:
                 stream()->async_write(boost::asio::buffer(sub), yield[ec]);
                 if (ec)
                 {
-                    LOG(ERROR) << "Sub|" << endpoint() << "|" << sub << "|" << ec << "|" << ec.message();
+                    G3LOG(ERROR) << "Sub|" << endpoint() << "|" << sub << "|" << ec << "|" << ec.message();
                 }
                 else
                 {
-                    LOG(INFO) << "Sub|" << endpoint() << "|" << sub;
+                    G3LOG(INFO) << "Sub|" << endpoint() << "|" << sub;
                 }
             }
         }
@@ -156,13 +156,13 @@ public:
         switch (frame_type)
         {
         case boost::beast::websocket::frame_type::ping:
-            LOG(DEBUG) << "ControlCallBack|" << endpoint() << "|ping|" << payload;
+            G3LOG(DEBUG) << "ControlCallBack|" << endpoint() << "|ping|" << payload;
             break;
         case boost::beast::websocket::frame_type::pong:
-            LOG(DEBUG) << "ControlCallBack|" << endpoint() << "|pong|" << payload;
+            G3LOG(DEBUG) << "ControlCallBack|" << endpoint() << "|pong|" << payload;
             break;
         case boost::beast::websocket::frame_type::close:
-            LOG(DEBUG) << "ControlCallBack|" << endpoint() << "|close|" << payload;
+            G3LOG(DEBUG) << "ControlCallBack|" << endpoint() << "|close|" << payload;
             break;
         }
     }
@@ -237,7 +237,7 @@ public:
             if (boost::asio::ssl::error::stream_truncated == ec ||
                 boost::asio::ssl::error::unspecified_system_error == ec)
             {
-                LOG(WARNING) << "Connect|" << endpoint() << "|" << ec << "|" << ec.message();
+                G3LOG(WARNING) << "Connect|" << endpoint() << "|" << ec << "|" << ec.message();
                 ec.clear();
             }
             else
@@ -273,7 +273,7 @@ public:
         {
             if (boost::asio::ssl::error::stream_truncated == ec)
             {
-                LOG(WARNING) << "HandShake|" << ec << "|" << ec.message();
+                G3LOG(WARNING) << "HandShake|" << ec << "|" << ec.message();
                 ec.clear();
             }
             else
@@ -290,19 +290,19 @@ public:
         Connect(yield, ec);
         if (ec)
         {
-            LOG(ERROR) << "Connect|"  << endpoint() << "|" << ec << "|" << ec.message();
+            G3LOG(ERROR) << "Connect|"  << endpoint() << "|" << ec << "|" << ec.message();
             return;
         }
-        LOG(INFO) << "Connect|" << endpoint();
+        G3LOG(INFO) << "Connect|" << endpoint();
 
         HandShake(yield, ec);
         if (!ec)
         {
-            LOG(INFO) << "HandShake|" << endpoint();
+            G3LOG(INFO) << "HandShake|" << endpoint();
         }
         else
         {
-            LOG(ERROR) << "HandShake|" << endpoint() << "|" << host_name() << "|" << cmd_ << "|" << ec << "|" << ec.message();
+            G3LOG(ERROR) << "HandShake|" << endpoint() << "|" << host_name() << "|" << cmd_ << "|" << ec << "|" << ec.message();
         }
     }
 
@@ -364,12 +364,12 @@ public:
                 buffer_.consume(size_read);
                 if (boost::beast::error::timeout == ec || boost::asio::error::operation_aborted == ec)
                 {
-                    LOG(WARNING) << "Read|" << endpoint() << "|" << ec << "|" << ec.message();
+                    G3LOG(WARNING) << "Read|" << endpoint() << "|" << ec << "|" << ec.message();
                     ReConnect(yield, ec);
                 }
                 else
                 {
-                    LOG(ERROR) << "Read|" << endpoint() << "|" << ec << "|" << ec.message();
+                    G3LOG(ERROR) << "Read|" << endpoint() << "|" << ec << "|" << ec.message();
                     //stop_ = true;
                 }
             }
@@ -441,7 +441,7 @@ public:
             if (boost::asio::ssl::error::stream_truncated == ec ||
                 boost::asio::ssl::error::unspecified_system_error == ec)
             {
-                LOG(WARNING) << "Connect|" << endpoint() << "|" << ec << "|" << ec.message();
+                G3LOG(WARNING) << "Connect|" << endpoint() << "|" << ec << "|" << ec.message();
                 ec.clear();
             }
             else
@@ -467,7 +467,7 @@ public:
         {
             if (boost::asio::ssl::error::stream_truncated == ec)
             {
-                LOG(WARNING) << "HandShake|" << ec << "|" << ec.message();
+                G3LOG(WARNING) << "HandShake|" << ec << "|" << ec.message();
                 ec.clear();
             }
             else
@@ -484,19 +484,19 @@ public:
         Connect(yield, ec);
         if (ec)
         {
-            LOG(ERROR) << "Connect|"  << endpoint() << "|" << ec << "|" << ec.message();
+            G3LOG(ERROR) << "Connect|"  << endpoint() << "|" << ec << "|" << ec.message();
             return;
         }
-        LOG(INFO) << "Connect|" << endpoint();
+        G3LOG(INFO) << "Connect|" << endpoint();
 
         HandShake(yield, ec);
         if (!ec)
         {
-            LOG(INFO) << "HandShake|" << endpoint();
+            G3LOG(INFO) << "HandShake|" << endpoint();
         }
         else
         {
-            LOG(ERROR) << "HandShake|" << endpoint() << "|" << host_name() << "|" << cmd_ << "|" << ec << "|" << ec.message();
+            G3LOG(ERROR) << "HandShake|" << endpoint() << "|" << host_name() << "|" << cmd_ << "|" << ec << "|" << ec.message();
         }
     }
 
@@ -556,12 +556,12 @@ public:
                 buffer_.consume(size_read);
                 if (boost::beast::error::timeout == ec || boost::asio::error::operation_aborted == ec)
                 {
-                    LOG(WARNING) << "Read|" << endpoint() << "|" << ec << "|" << ec.message();
+                    G3LOG(WARNING) << "Read|" << endpoint() << "|" << ec << "|" << ec.message();
                     ReConnect(yield, ec);
                 }
                 else
                 {
-                    LOG(ERROR) << "Read|" << endpoint() << "|" << ec << "|" << ec.message();
+                    G3LOG(ERROR) << "Read|" << endpoint() << "|" << ec << "|" << ec.message();
                     //stop_ = true;
                 }
             }
