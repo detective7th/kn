@@ -192,9 +192,10 @@ enum Ctrl
 {
     CtrlContinue = 0,
     CtrlReConnect = 1,
-    CtrlPong = 2,
-    CtrlUnSub = 3,
-    CtrlReSub = 4,
+    CtrlPing = 2,
+    CtrlPong = 3,
+    CtrlUnSub = 4,
+    CtrlReSub = 5,
 };
 
 template<bool EnableSSL> class Conn;
@@ -376,7 +377,7 @@ public:
             else
             {
                 Ctrl ctrl = OnRead(static_cast<const char*>(buffer_.data().data()), size_read, yield, ec);
-                LOG_IF(ERROR, !!ec) << "OnRead|" << endpoint() << "|"
+                G3LOG_IF(ERROR, !!ec) << "OnRead|" << endpoint() << "|"
                                     << ec << "|" << ec.message() << "|"
                                     << boost::beast::make_printable(buffer_.data());
                 //Close(yield, ec, boost::beast::websocket::close_code::bad_payload);
@@ -384,19 +385,30 @@ public:
                 //if (boost::beast::websocket::error::upgrade_declined == ec) return;
 
                 buffer_.consume(size_read);
-                if (UNLIKELY(CtrlReConnect == ctrl))
+                switch(ctrl)
                 {
-                    do
+                case CtrlReConnect:
                     {
-                        Close(yield, ec);
-                    } while (stream()->is_open());
-                    goto START;
-                }
-                else if (UNLIKELY(CtrlReSub == ctrl))
-                {
-                    UnSub(yield, ec);
-                    Init();
-                    Sub(yield, ec);
+                        do
+                        {
+                            Close(yield, ec);
+                        } while (stream()->is_open());
+                        goto START;
+                    }
+                    break;
+                case CtrlReSub:
+                    {
+                        UnSub(yield, ec);
+                        Init();
+                        Sub(yield, ec);
+                    }
+                    break;
+                case CtrlPing:
+                    stream()->ping({});
+                    G3LOG_IF(ERROR, !!ec) << "Ping|" << endpoint() << "|" << ec << "|" << ec.message();
+                    break;
+                default:
+                    break;;
                 }
             }
         }
