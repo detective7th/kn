@@ -57,5 +57,10 @@ RUN make -j $(nproc) && make install \
     && cp xxh3.h /usr/local/include/ \
     && ldconfig
 
+WORKDIR /data/3rd
+RUN git clone https://github.com/yhirose/cpp-httplib.git
+WORKDIR /data/3rd/cpp-httplib
+RUN mkdir build_ && cd build_ && cmake .. && make -j $(nproc) && make install && ldconfig
+
 WORKDIR /
 RUN rm -rf /data/
