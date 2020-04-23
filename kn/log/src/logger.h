@@ -39,6 +39,9 @@ class Logger
 public:
     explicit Logger(std::string filename, std::string prefix, std::size_t rotate_size)
     {
+        std::string commond("mkdir -p " + prefix);
+        system(commond.c_str());
+
         g3::only_change_at_initialization::addLogLevel(ERROR, true);
 #ifndef DDEBUG
         g3::log_levels::disable(DEBUG);
