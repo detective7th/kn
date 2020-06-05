@@ -34,7 +34,7 @@ RUN rm -rf g3log
 
 RUN git clone https://github.com/KjellKod/g3sinks.git
 WORKDIR /data/3rd/g3sinks/logrotate
-RUN mkdir build && cd build && cmake .. && make -j $(nproc) && make install && ldconfig
+RUN mkdir build && cd build && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
 
 WORKDIR /data/3rd
 RUN rm -rf g3sinks
