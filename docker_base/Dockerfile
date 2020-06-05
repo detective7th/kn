@@ -13,21 +13,21 @@ RUN mkdir /data && mkdir /data/3rd
 WORKDIR /data/3rd
 RUN git clone https://github.com/mfontanini/cppkafka.git --recursive
 WORKDIR /data/3rd/cppkafka
-RUN  mkdir build && cd build && cmake .. && make -j $(nproc) && make install && ldconfig
+RUN  mkdir build && cd build && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
 
 WORKDIR /data/3rd
 RUN rm -rf cppkafka
 
 RUN git clone https://github.com/jupp0r/prometheus-cpp.git --recursive
 WORKDIR /data/3rd/prometheus-cpp
-RUN mkdir _build && cd _build && cmake .. -DBUILD_SHARED_LIBS=ON && make -j $(nproc) && make install && ldconfig
+RUN mkdir _build && cd _build && cmake .. -Wno-dev -DBUILD_SHARED_LIBS=ON && make -j $(nproc) && make install && ldconfig
 
 WORKDIR /data/3rd
 RUN rm -rf prometheus-cpp
 
 RUN git clone https://github.com/KjellKod/g3log.git
 WORKDIR /data/3rd/g3log
-RUN mkdir build && cd build && cmake .. -DUSE_DYNAMIC_LOGGING_LEVELS=ON && make -j $(nproc) && make install && ldconfig
+RUN mkdir build && cd build && cmake .. -Wno-dev -DUSE_DYNAMIC_LOGGING_LEVELS=ON && make -j $(nproc) && make install && ldconfig
 
 WORKDIR /data/3rd
 RUN rm -rf g3log
@@ -41,12 +41,12 @@ RUN rm -rf g3sinks
 
 RUN git clone https://github.com/facebook/folly.git
 WORKDIR /data/3rd/folly
-RUN mkdir build_ && cd build_ && cmake .. && make -j $(nproc) && make install && ldconfig
+RUN mkdir build_ && cd build_ && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
 
 WORKDIR /data/3rd
 RUN git clone https://github.com/HowardHinnant/date.git
 WORKDIR /data/3rd/date
-RUN mkdir build && cd build && cmake .. -DBUILD_SHARED_LIBS=ON -DBUILD_TZ_LIB=ON && make -j $(nproc) && make install \
+RUN mkdir build && cd build && cmake .. -Wno-dev -DBUILD_SHARED_LIBS=ON -DBUILD_TZ_LIB=ON && make -j $(nproc) && make install \
     && cd /data/3rd/date && cp src/*.cpp /usr/local/include/date/ && cp include/date/*.h /usr/local/include/date
 
 WORKDIR /data/3rd
@@ -60,7 +60,7 @@ RUN make -j $(nproc) && make install \
 WORKDIR /data/3rd
 RUN git clone https://github.com/yhirose/cpp-httplib.git
 WORKDIR /data/3rd/cpp-httplib
-RUN mkdir build_ && cd build_ && cmake .. && make -j $(nproc) && make install && ldconfig
+RUN mkdir build_ && cd build_ && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
 
 WORKDIR /
 RUN rm -rf /data/

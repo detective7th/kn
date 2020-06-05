@@ -1,4 +1,4 @@
-FROM detective7th/kn_base
+FROM detective7th/kn_base:latest
 MAINTAINER kid.Novalis
 
 ARG build_type=Release
