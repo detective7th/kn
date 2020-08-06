@@ -312,13 +312,67 @@ public:
         }
     }
 
+    void Sleep(const std::chrono::milliseconds seconds, boost::asio::yield_context& yield, boost::system::error_code& ec)
+    {
+        boost::asio::steady_timer timer(stream()->ioc_, seconds);
+        timer.async_wait(yield[ec]);
+    }
+
+    virtual void ReConnectRate(boost::asio::yield_context& yield, boost::system::error_code& ec)
+    {
+        /*
+          问题：1。重连->未连上->重复之前过程
+               2. 重连->连上->1s内被对端关闭->重复之前过程
+          方案：1. 三个字段，上次重连时间(非连接成功时间)last_reconnect_ts_，重连失败次数connect_fail_count_，重连间隔intval(根据交易所设置)。
+               2. 只有当ts_now - last_reconnect_ts_相差1分钟以上才能证明上次连接成功是有效的，此时重连失败次数清零。
+               3. 重连间隔 按照失败次数累进。
+        */
+        uint64_t intval = 100; //ms
+        auto ts_now = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+
+        if ((ts_now - last_reconnect_ts_) >= 20*1000)
+        {
+            connect_fail_count_ = 0;
+        }
+        ++connect_fail_count_;
+        if(connect_fail_count_ <= 2)
+        {
+            //Sleep(std::chrono::milliseconds(1), yield, ec);
+        }
+        else if(connect_fail_count_ <= 5)
+        {
+            Sleep(std::chrono::milliseconds(intval), yield, ec);
+        }
+        else if(connect_fail_count_ <= 10)
+        {
+            Sleep(std::chrono::milliseconds(10*intval), yield, ec);
+        }
+        else if(connect_fail_count_ <= 50)
+        {
+            Sleep(std::chrono::milliseconds(50*intval), yield, ec);
+        }
+        else
+        {
+            Sleep(std::chrono::milliseconds(800*intval), yield, ec);
+        }
+        last_reconnect_ts_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+    }
+
+    virtual void ApiRate()
+    {
+
+    }
+
     void ReConnect(boost::asio::yield_context& yield, boost::beast::error_code& ec)
     {
         if (stream()->is_open())
         {
             Close(yield, ec);
         }
-        //
+        ReConnectRate(yield, ec);
+
         auto& ioc = stream_->ioc_;
         auto& ssl = stream_->ssl_;
         delete stream_;
@@ -426,6 +480,9 @@ public:
 
 protected:
     boost::beast::flat_buffer buffer_;
+    uint64_t last_reconnect_ts_{0};
+    uint64_t last_reconnect_succ_ts_{0};
+    uint32_t connect_fail_count_{0};
 };
 
 
@@ -517,12 +574,66 @@ public:
         }
     }
 
+    void Sleep(const std::chrono::milliseconds seconds, boost::asio::yield_context& yield, boost::system::error_code& ec)
+    {
+        boost::asio::steady_timer timer(stream()->ioc_, seconds);
+        timer.async_wait(yield[ec]);
+    }
+
+    virtual void ReConnectRate(boost::asio::yield_context& yield, boost::system::error_code& ec)
+    {
+        /*
+          问题：1。重连->未连上->重复之前过程
+               2. 重连->连上->1s内被对端关闭->重复之前过程
+          方案：1. 三个字段，上次重连时间(非连接成功时间)last_reconnect_ts_，重连失败次数connect_fail_count_，重连间隔intval(根据交易所设置)。
+               2. 只有当ts_now - last_reconnect_ts_相差1分钟以上才能证明上次连接成功是有效的，此时重连失败次数清零。
+               3. 重连间隔 按照失败次数累进。
+        */
+        uint64_t intval = 100; //ms
+        auto ts_now = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+
+        if ((ts_now - last_reconnect_ts_) >= 20*1000)
+        {
+            connect_fail_count_ = 0;
+        }
+        ++connect_fail_count_;
+        if(connect_fail_count_ <= 2)
+        {
+            //Sleep(std::chrono::milliseconds(1), yield, ec);
+        }
+        else if(connect_fail_count_ <= 5)
+        {
+            Sleep(std::chrono::milliseconds(intval), yield, ec);
+        }
+        else if(connect_fail_count_ <= 10)
+        {
+            Sleep(std::chrono::milliseconds(10*intval), yield, ec);
+        }
+        else if(connect_fail_count_ <= 50)
+        {
+            Sleep(std::chrono::milliseconds(50*intval), yield, ec);
+        }
+        else
+        {
+            Sleep(std::chrono::milliseconds(800*intval), yield, ec);
+        }
+        last_reconnect_ts_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+    }
+
+    virtual void ApiRate()
+    {
+
+    }
+
     void ReConnect(boost::asio::yield_context& yield, boost::beast::error_code& ec)
     {
         if (stream()->is_open())
         {
             Close(yield, ec);
         }
+        ReConnectRate(yield, ec);
 
         auto& ioc = stream()->ioc_;
         delete stream_;
@@ -612,6 +723,9 @@ public:
 
 protected:
     boost::beast::flat_buffer buffer_;
+    uint64_t last_reconnect_ts_{0};
+    uint64_t last_reconnect_succ_ts_{0};
+    uint32_t connect_fail_count_{0};
 };
 
 
