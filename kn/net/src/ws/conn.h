@@ -21,6 +21,7 @@
 //#include <g3log/g3log.hpp>
 #include <folly/Likely.h>
 #include <kn/log/logger.h>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
@@ -211,12 +212,16 @@ public:
          const std::vector<std::string>& subs)
             :StreamEntry<WsStream<WsStreamSSL>>(new WsStream<WsStreamSSL>(ioc, ssl), entry, cmd, subs)
     {
-
-
         buffer_.reserve(1 << 18);
     }
 
     virtual ~Conn() {}
+
+    void Sleep(const std::chrono::seconds seconds, boost::asio::yield_context& yield, boost::system::error_code& ec)
+    {
+        boost::asio::steady_timer timer(stream()->ioc_, seconds);
+        timer.async_wait(yield[ec]);
+    }
 
     void Connect(boost::asio::yield_context& yield, boost::system::error_code& ec)
     {
@@ -313,7 +318,7 @@ public:
         {
             Close(yield, ec);
         }
-
+        //
         auto& ioc = stream_->ioc_;
         auto& ssl = stream_->ssl_;
         delete stream_;
