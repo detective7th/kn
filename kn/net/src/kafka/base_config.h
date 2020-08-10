@@ -46,7 +46,7 @@ struct BaseConfig
 };
 
 
-} // ws
+} // kafka
 } // net
 } // kn
 

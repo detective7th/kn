@@ -175,6 +175,11 @@ public:
         Close(ec);
     }
 
+    void SetCmd(const std::string& cmd)
+    {
+        cmd_ = cmd;
+    }
+
 protected:
     boost::beast::websocket::stream_base::timeout opt_timeout_{
             std::chrono::seconds(32), // handshake
