@@ -53,55 +53,80 @@ public:
 
     void Send(const std::string& data, boost::system::error_code& ec)
     {
-        producer_->produce(cppkafka::MessageBuilder(topic_).payload(data));
+        try{
+            producer_->produce(cppkafka::MessageBuilder(topic_).payload(data));
 
-        if (flush_flag_)
+            if (flush_flag_)
+            {
+
+                producer_->flush();
+            }
+        }
+        catch(std::exception& e)
         {
-            producer_->flush();
+            G3LOG(ERROR) << e.what();
         }
     }
 
     size_t Send(const char* data, const size_t& send_size, boost::system::error_code& ec)
     {
-        producer_->produce(cppkafka::MessageBuilder(topic_).payload(cppkafka::Buffer(data, send_size)));
+        try{
+            producer_->produce(cppkafka::MessageBuilder(topic_).payload(cppkafka::Buffer(data, send_size)));
 
-        if (flush_flag_)
+            if (flush_flag_)
+            {
+                producer_->flush();
+            }
+        }
+        catch(std::exception& e)
         {
-            producer_->flush();
+            G3LOG(ERROR) << e.what();
         }
     }
 
     void Send(const std::string& data, boost::system::error_code& ec, const std::string& topic)
     {
-        if (topic.empty())
-        {
-            producer_->produce(cppkafka::MessageBuilder(topic_).payload(data));
-        }
-        else
-        {
-            producer_->produce(cppkafka::MessageBuilder(topic).payload(data));
-        }
+        try{
+            if (topic.empty())
+            {
+                producer_->produce(cppkafka::MessageBuilder(topic_).payload(data));
+            }
+            else
+            {
+                producer_->produce(cppkafka::MessageBuilder(topic).payload(data));
+            }
 
-        if (flush_flag_)
+            if (flush_flag_)
+            {
+                producer_->flush();
+            }
+         }
+        catch(std::exception& e)
         {
-            producer_->flush();
+            G3LOG(ERROR) << e.what();
         }
     }
 
     size_t Send(const char* data, const size_t& send_size, boost::system::error_code& ec, const std::string& topic)
     {
-        if (topic.empty())
-        {
-            producer_->produce(cppkafka::MessageBuilder(topic_).payload(cppkafka::Buffer(data, send_size)));
-        }
-        else
-        {
-            producer_->produce(cppkafka::MessageBuilder(topic).payload(cppkafka::Buffer(data, send_size)));
-        }
+        try{
+            if (topic.empty())
+            {
+                producer_->produce(cppkafka::MessageBuilder(topic_).payload(cppkafka::Buffer(data, send_size)));
+            }
+            else
+            {
+                producer_->produce(cppkafka::MessageBuilder(topic).payload(cppkafka::Buffer(data, send_size)));
+            }
 
-        if (flush_flag_)
+            if (flush_flag_)
+            {
+                producer_->flush();
+            }
+        }
+        catch(std::exception& e)
         {
-            producer_->flush();
+            G3LOG(ERROR) << e.what();
         }
     }
 
