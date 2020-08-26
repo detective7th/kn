@@ -112,6 +112,21 @@ public:
         }
     }
 
+    void Send(const std::vector<std::string>& msgs, boost::system::error_code& ec)
+    {
+        for(auto& msg: msgs)
+        {
+            for (auto& receiver: receivers_)
+            {
+                receiver.Send(msg, ec);
+            }
+            for (auto& receiver: kafka_receivers_)
+            {
+                receiver.Send(msg, ec);
+            }
+        }
+    }
+
 protected:
     std::vector<kn::net::udp::Conn>& receivers_;
     std::vector<kn::net::kafka::Producer> kafka_receivers_;
