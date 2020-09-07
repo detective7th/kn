@@ -24,9 +24,13 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/ssl.hpp>
 #include <cppkafka/cppkafka.h>
+#include <cppkafka/metadata.h>
 #include <librdkafka/rdkafkacpp.h>
 #include <iostream>
-#include "base_config.h"
+#include <vector>
+#include <string>
+#include <memory>
+#include <kn/net/kafka/base_config.h>
 
 namespace kn
 {
@@ -43,7 +47,7 @@ class StreamEntry
 public:
     StreamEntry(const Entry& entry,
                 const std::string& cmd,
-                const BaseConfig& base_config,
+                const std::shared_ptr<BaseConfig>& base_config,
                 const std::vector<std::string>& subs)
             :entry_(entry)
             ,cmd_(cmd)
@@ -62,25 +66,25 @@ public:
     {
         cppkafka::Configuration config = {
                // { "metadata.broker.list", entry_.host_name()+":"+entry_.service_name()},
-                { "metadata.broker.list", base_config_.hosts_},
-                { "enable.auto.commit", base_config_.auto_commit_ },
-                //{ "queue.buffering.max.ms", base_config_.queue_buffering_max_ms_ },
-                { "fetch.wait.max.ms", base_config_.fetch_wait_max_ms_},
-                { "group.id",base_config_.group_id_}
+                { "metadata.broker.list", base_config_->hosts_},
+                { "enable.auto.commit", base_config_->auto_commit_ },
+                //{ "queue.buffering.max.ms", base_config_->queue_buffering_max_ms_ },
+                { "fetch.wait.max.ms", base_config_->fetch_wait_max_ms_},
+                { "group.id",base_config_->group_id_}
                 //{"isolation.level", "read_uncommitted"},
                // {"enable.auto.offset.store", false}
         };
-        if (base_config_.auto_commit_ == true)
+        if (base_config_->auto_commit_ == true)
         {
             consumer_ = std::make_shared<KafkaConsumer>(config);
             return;
         }
 
-        if (base_config_.offset_ == 0 || base_config_.offset_ == -2)
+        if (base_config_->offset_ == 0 || base_config_->offset_ == -2)
         {
             config.set("auto.offset.reset", "smallest");
         }
-        else if(base_config_.offset_ == -1)
+        else if(base_config_->offset_ == -1)
         {
             config.set("auto.offset.reset", "largest");
         }
@@ -125,6 +129,7 @@ public:
 
     }
 
+    // Make sure this is called AFTER Init() 
     void Sub(boost::asio::yield_context& yield, boost::beast::error_code& ec)
     {
         if (subs_.empty())
@@ -132,23 +137,40 @@ public:
             G3LOG(ERROR) << "Sub|" << endpoint() << "|no subs";
             return;
         }
+        std::vector<std::string> real_subs;
+        // Retrieve the actual and real topics
+        cppkafka::Metadata metadata = consumer_->get_metadata();
+        auto tplist = metadata.get_topics(); //vector<TopicMetadata>
+        for(const auto& sub : subs_)
+        {
+            std::vector<cppkafka::TopicMetadata> filtered_topics;
+            std::copy_if(tplist.begin(), tplist.end(), std::back_inserter(filtered_topics),
+                [&](auto& e){return e.get_name().find(sub)!=std::string::npos;});
+            std::transform(filtered_topics.begin(), filtered_topics.end(), std::back_inserter(real_subs),
+                [&](auto& e){return e.get_name();});
+        }
+        //setting the real topics
+        subs_.assign(real_subs.begin(), real_subs.end());
+        base_config_->subs_.assign(real_subs.begin(), real_subs.end());
 
+        std::vector<cppkafka::TopicPartition> partitions;
         for (const auto& sub : subs_)
         {
-            G3LOG(INFO) << "Sub|" << endpoint() << "|" << sub;
+            G3LOG(INFO) << "Sub|" << endpoint() << "|--> " << sub;
+            partitions.push_back(cppkafka::TopicPartition(sub, base_config_->partitions_, base_config_->offset_));
         }
 
-        if(base_config_.offset_ > 0)
-        {
+        if(base_config_->offset_ > 0)
+        {//TODO vector<offset> for every topics
             //不能用subscribe，不然offset设置无效
-            std::vector<cppkafka::TopicPartition> partitions;
-            partitions.push_back(cppkafka::TopicPartition(base_config_.subs_[0], base_config_.partitions_, base_config_.offset_));
             consumer_->assign(partitions);
-            G3LOG(INFO)<<"consumer_ partitions="<<partitions<<"|offset="<<base_config_.offset_;
-        }else{
-            consumer_->subscribe(base_config_.subs_);
+            G3LOG(INFO)<<"consumer assign partitions="<<partitions<<"|offset="<<base_config_->offset_;
         }
-
+        else
+        {
+            consumer_->subscribe(base_config_->subs_);
+        }
+        
         auto tpl = consumer_->get_assignment();
         G3LOG(INFO)<<"Begin offset|"<<tpl;
     }
@@ -165,7 +187,7 @@ protected:
     std::shared_ptr<KafkaConsumer> consumer_{nullptr};
     const Entry& entry_;
     std::string cmd_;
-    const BaseConfig& base_config_;
+    std::shared_ptr<kn::net::kafka::BaseConfig> base_config_; // workaround & tricky: reference to the external global var
     std::vector<std::string> subs_;
     bool stop_{false};
 };
@@ -190,7 +212,7 @@ public:
          boost::asio::ssl::context& ssl,
          const kn::net::kafka::Entry& entry,
          const std::string& cmd,
-         const BaseConfig& base_config,
+         const std::shared_ptr<BaseConfig>& base_config,
          const std::vector<std::string>& subs)
             :StreamEntry(entry, cmd, base_config, subs)
     {
@@ -204,6 +226,12 @@ public:
     {
         boost::beast::error_code ec;
   START:
+        // StreamEntry::Init is overridden by its descendents(e.g. WsRelayParsers, KafkaRelayParsers)
+        // but we have to have it called once. 
+        // Note that there is a sequential dep on Init() and StreamEntry::Init(). 
+        // The former Init(from KafkaRelayParsers) should come first, because it will set kafka offset in a global var baseConfig,
+        // which then will be used in StreamEntry::Init() who initializes the kafka consumer instance with that offset info.
+        // Also, make sure Sub() is called after Init(), naturally.
         Init();
         StreamEntry::Init();
         Sub(yield, ec);
@@ -254,11 +282,11 @@ public:
          boost::asio::ssl::context& ssl,
          const kn::net::kafka::Entry& entry,
          const std::string& cmd,
-         const BaseConfig& base_config,
+         const std::shared_ptr<BaseConfig>& base_config,
          const std::vector<std::string>& subs)
             :StreamEntry(entry, cmd, base_config, subs)
     {
-
+        
 
     }
 
@@ -269,6 +297,12 @@ public:
         boost::beast::error_code ec;
 
   START:
+        // StreamEntry::Init is overridden by its descendents(e.g. WsRelayParsers, KafkaRelayParsers)
+        // but we have to have it called once. 
+        // Note that there is a sequential dep on Init() and StreamEntry::Init(). 
+        // The former Init(from KafkaRelayParsers) should come first, because it will set kafka offset in a global var baseConfig,
+        // which then will be used in StreamEntry::Init() who initializes the kafka consumer instance with that offset info.
+        // Also, make sure Sub() is called after Init(), naturally.
         Init();
         StreamEntry::Init();
         Sub(yield, ec);

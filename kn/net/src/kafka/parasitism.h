@@ -47,7 +47,7 @@ public:
                boost::asio::ssl::context& ssl,
                const kn::net::kafka::Entry& entry,
                const std::string& cmd,
-               const BaseConfig& base_config,
+               const std::shared_ptr<kn::net::kafka::BaseConfig>& base_config,
                const std::vector<std::string>& sub,
                Parasitifer<true>* parasitifer)
             :Conn<true>(ioc, ssl, entry, cmd, base_config, sub)
@@ -65,7 +65,7 @@ public:
                boost::asio::ssl::context& ssl,
                const kn::net::kafka::Entry& entry,
                const std::string& cmd,
-               const BaseConfig& base_config,
+               const std::shared_ptr<kn::net::kafka::BaseConfig>& base_config,
                const std::vector<std::string>& sub,
                Parasitifer<false>* parasitifer)
             :Conn<false>(ioc, ssl, entry, cmd, base_config, sub)
