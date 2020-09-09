@@ -1,4 +1,4 @@
-#cmakedefine TEST
+#cmakedefine KN_TEST
 
 #define VERSION_MAJOR "@VERSION_MAJOR@"
 #define VERSION_MINOR "@VERSION_MINOR@"
