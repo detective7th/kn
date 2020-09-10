@@ -145,16 +145,16 @@ public:
 
         for (const auto &sub : subs_)
         {
-            auto filter_func = [&](auto &e)
-            {
+            auto filter_func = [&](auto &e) {
+                bool contains_sub = (e.get_name().find(sub) != std::string::npos);
                 // special handling for trading_result
                 if (e.get_name().find("trading_result.") != std::string::npos)
                 {
                     std::regex re(R"(trading_result\.\w+\.\d+_\d+)");
                     std::smatch match;
-                    return std::regex_match(e.get_name(), match, re);
+                    return contains_sub && std::regex_match(e.get_name(), match, re);
                 }
-                return e.get_name().find(sub) != std::string::npos;
+                return contains_sub;
             };
             std::vector<cppkafka::TopicMetadata> filtered_topics;
             std::copy_if(tplist.begin(), tplist.end(), std::back_inserter(filtered_topics), filter_func);
