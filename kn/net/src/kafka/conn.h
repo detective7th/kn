@@ -30,6 +30,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <regex>
 #include <kn/net/kafka/base_config.h>
 
 namespace kn
@@ -129,7 +130,7 @@ public:
 
     }
 
-    // Make sure this is called AFTER Init() 
+    // Make sure this is called AFTER Init()
     void Sub(boost::asio::yield_context& yield, boost::beast::error_code& ec)
     {
         if (subs_.empty())
@@ -141,11 +142,22 @@ public:
         // Retrieve the actual and real topics
         cppkafka::Metadata metadata = consumer_->get_metadata();
         auto tplist = metadata.get_topics(); //vector<TopicMetadata>
-        for(const auto& sub : subs_)
+
+        for (const auto &sub : subs_)
         {
+            auto filter_func = [&](auto &e)
+            {
+                // special handling for trading_result
+                if (e.get_name().find("trading_result.") != std::string::npos)
+                {
+                    std::regex re(R"(trading_result\.\w+\.\d+_\d+)");
+                    std::smatch match;
+                    return std::regex_match(e.get_name(), match, re);
+                }
+                return e.get_name().find(sub) != std::string::npos;
+            };
             std::vector<cppkafka::TopicMetadata> filtered_topics;
-            std::copy_if(tplist.begin(), tplist.end(), std::back_inserter(filtered_topics),
-                [&](auto& e){return e.get_name().find(sub)!=std::string::npos;});
+            std::copy_if(tplist.begin(), tplist.end(), std::back_inserter(filtered_topics), filter_func);
             std::transform(filtered_topics.begin(), filtered_topics.end(), std::back_inserter(real_subs),
                 [&](auto& e){return e.get_name();});
         }
@@ -170,7 +182,7 @@ public:
         {
             consumer_->subscribe(base_config_->subs_);
         }
-        
+
         auto tpl = consumer_->get_assignment();
         G3LOG(INFO)<<"Begin offset|"<<tpl;
     }
@@ -227,8 +239,8 @@ public:
         boost::beast::error_code ec;
   START:
         // StreamEntry::Init is overridden by its descendents(e.g. WsRelayParsers, KafkaRelayParsers)
-        // but we have to have it called once. 
-        // Note that there is a sequential dep on Init() and StreamEntry::Init(). 
+        // but we have to have it called once.
+        // Note that there is a sequential dep on Init() and StreamEntry::Init().
         // The former Init(from KafkaRelayParsers) should come first, because it will set kafka offset in a global var baseConfig,
         // which then will be used in StreamEntry::Init() who initializes the kafka consumer instance with that offset info.
         // Also, make sure Sub() is called after Init(), naturally.
@@ -286,7 +298,7 @@ public:
          const std::vector<std::string>& subs)
             :StreamEntry(entry, cmd, base_config, subs)
     {
-        
+
 
     }
 
@@ -298,8 +310,8 @@ public:
 
   START:
         // StreamEntry::Init is overridden by its descendents(e.g. WsRelayParsers, KafkaRelayParsers)
-        // but we have to have it called once. 
-        // Note that there is a sequential dep on Init() and StreamEntry::Init(). 
+        // but we have to have it called once.
+        // Note that there is a sequential dep on Init() and StreamEntry::Init().
         // The former Init(from KafkaRelayParsers) should come first, because it will set kafka offset in a global var baseConfig,
         // which then will be used in StreamEntry::Init() who initializes the kafka consumer instance with that offset info.
         // Also, make sure Sub() is called after Init(), naturally.
