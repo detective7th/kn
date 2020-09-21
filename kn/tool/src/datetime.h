@@ -82,6 +82,7 @@ std::errc StrUnixTsToTP(const STR& str, TimePoint& ts)
     return errc;
 }
 
+#if __cplusplus > 201703L
 template<class T>
 concept ClockType = requires(T clock)
 {
@@ -95,6 +96,15 @@ uint64_t NowTS()
     //return std::chrono::duration_cast<date::sys_time<std::chrono::microseconds>::duration>(
     //    std::chrono::system_clock::now().time_since_epoch()).count()
 }
+#else
+template<class Clock, class Dur>
+uint64_t NowTS()
+{
+    return std::chrono::duration_cast<Dur>(Clock::now().time_since_epoch()).count();
+}
+
+#endif
+
 //void StrViewToUTCTime(const std::string_view& view, date::utc_time<std::chrono::microseconds>& ts)
 //{
 //    std::stringstream ss;
