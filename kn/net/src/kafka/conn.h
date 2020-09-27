@@ -31,6 +31,7 @@
 #include <string>
 #include <memory>
 #include <regex>
+#include <algorithm>
 #include <kn/net/kafka/base_config.h>
 
 namespace kn
@@ -65,30 +66,40 @@ public:
 
     virtual void Init()
     {
-        cppkafka::Configuration config = {
-               // { "metadata.broker.list", entry_.host_name()+":"+entry_.service_name()},
-                { "metadata.broker.list", base_config_->hosts_},
-                { "enable.auto.commit", base_config_->auto_commit_ },
-                //{ "queue.buffering.max.ms", base_config_->queue_buffering_max_ms_ },
-                { "fetch.wait.max.ms", base_config_->fetch_wait_max_ms_},
-                { "group.id",base_config_->group_id_}
-                //{"isolation.level", "read_uncommitted"},
-               // {"enable.auto.offset.store", false}
-        };
-        if (base_config_->auto_commit_ == true)
+        cppkafka::Configuration& config = base_config_->config;
+        // {
+        //        // { "metadata.broker.list", entry_.host_name()+":"+entry_.service_name()},
+        //         { "metadata.broker.list", base_config_->hosts_},
+        //         { "enable.auto.commit", base_config_->auto_commit_ },
+        //         //{ "queue.buffering.max.ms", base_config_->queue_buffering_max_ms_ },
+        //         { "fetch.wait.max.ms", base_config_->fetch_wait_max_ms_},
+        //         { "group.id",base_config_->group_id_}
+        //         //{"isolation.level", "read_uncommitted"},
+        //        // {"enable.auto.offset.store", false}
+        // };
+
+        if (base_config_->GetAutoCommit() == true)
         {
             consumer_ = std::make_shared<KafkaConsumer>(config);
             return;
         }
-
-        if (base_config_->offset_ == 0 || base_config_->offset_ == -2)
+        auto offsets = base_config_->GetOffsets();
+        // strict condition: only offsets of all topics are those special values, we admit.
+        bool compare_res = std::all_of(offsets.begin(), offsets.end(),
+            [](const auto &e) { return e.second == 0 || e.second == -2; });
+        bool compare_res_neg1 = std::all_of(offsets.begin(), offsets.end(),
+            [](const auto &e) { return e.second == -1; });
+        if (compare_res)
         {
+            G3LOG(INFO) << "Set auto.offset.reset -> smallest";
             config.set("auto.offset.reset", "smallest");
         }
-        else if(base_config_->offset_ == -1)
+        else if(compare_res_neg1)
         {
+            G3LOG(INFO) << "Set auto.offset.reset -> largest";
             config.set("auto.offset.reset", "largest");
         }
+
         consumer_ = std::make_shared<KafkaConsumer>(config);
     }
 
@@ -143,7 +154,7 @@ public:
         cppkafka::Metadata metadata = consumer_->get_metadata();
         auto tplist = metadata.get_topics(); //vector<TopicMetadata>
 
-        for (const auto &sub : subs_)
+        for (const auto &sub : this->subs_)
         {
             auto filter_func = [&](auto &e) {
                 bool contains_sub = (e.get_name().find(sub) != std::string::npos);
@@ -163,24 +174,32 @@ public:
         }
         //setting the real topics
         subs_.assign(real_subs.begin(), real_subs.end());
-        base_config_->subs_.assign(real_subs.begin(), real_subs.end());
+        //base_config_->subs_.assign(real_subs.begin(), real_subs.end());
+        base_config_->ExtendTopicsWithDefaultOffset(subs_);
 
-        std::vector<cppkafka::TopicPartition> partitions;
-        for (const auto& sub : subs_)
+        //TODOTODO update offsets in tpo_info_ from the Loaded offsets if any
+
+        // now retrieve the TPO info from baseConfig
+        std::vector<cppkafka::TopicPartition> partitions(base_config_->GetTopicPartitions());
+
+        for (const auto& tpo : partitions)
         {
-            G3LOG(INFO) << "Sub|" << endpoint() << "|--> " << sub;
-            partitions.push_back(cppkafka::TopicPartition(sub, base_config_->partitions_, base_config_->offset_));
+            G3LOG(INFO) << "Sub|" << endpoint() << "|--> "
+                << tpo.get_topic() << "| " << tpo.get_partition()
+                << " |offset=" << tpo.get_offset();
         }
-
-        if(base_config_->offset_ > 0)
+        bool compare_any_gt0 = std::any_of(partitions.begin(), partitions.end(),
+                                           [&](auto &e) { return e.get_offset() > 0; });
+        if (compare_any_gt0 && (!base_config_->IsManualCommitAllowed()))
         {//TODO vector<offset> for every topics
             //不能用subscribe，不然offset设置无效
             consumer_->assign(partitions);
-            G3LOG(INFO)<<"consumer assign partitions="<<partitions<<"|offset="<<base_config_->offset_;
+            G3LOG(INFO) << "consumer assigned partitions=" << partitions;
         }
         else
         {
-            consumer_->subscribe(base_config_->subs_);
+            G3LOG(INFO) << "consumer subscribed topics";
+            consumer_->subscribe(base_config_->GetTopics());
         }
 
         auto tpl = consumer_->get_assignment();
