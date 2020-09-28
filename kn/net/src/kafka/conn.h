@@ -101,6 +101,13 @@ public:
         }
 
         consumer_ = std::make_shared<KafkaConsumer>(config);
+
+        consumer_->set_assignment_callback(
+            [&](std::vector<cppkafka::TopicPartition>& topic_partitions) {
+                // Here you could fetch offsets and do something, altering the offsets on the
+                // topic_partitions vector if needed
+                G3LOG(INFO) << "Got assigned: " <<  topic_partitions;
+        });
     }
 
     boost::asio::ip::basic_endpoint<boost::asio::ip::tcp> endpoint() const
