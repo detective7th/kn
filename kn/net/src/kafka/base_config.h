@@ -39,10 +39,12 @@ public:
 
     BaseConfig() : config(),
     auto_commit_(false), queue_buffering_max_ms_(50), fetch_wait_max_ms_(10),
+    fetch_min_bytes_(1*1024*1024),
     do_manual_commit_(false)
     {
         config.set("enable.auto.commit", this->auto_commit_);
         config.set("fetch.wait.max.ms", this->fetch_wait_max_ms_);
+        config.set("fetch.min.bytes", this->fetch_min_bytes_);
     }
 
     inline void EnableManualCommit() { this->do_manual_commit_ = true; }
@@ -65,6 +67,12 @@ public:
     {
         fetch_wait_max_ms_ = fwmm;
         config.set("fetch.wait.max.ms", fwmm);
+    }
+
+    void SetFetchMinBytes(size_t fmb)
+    {
+        fetch_min_bytes_ = fmb;
+        config.set("fetch.min.bytes", fmb);
     }
 
     void SetGroupId(const std::string & kgid)
@@ -180,6 +188,7 @@ private:
     bool auto_commit_;
     size_t queue_buffering_max_ms_; //写入缓存时间
     size_t fetch_wait_max_ms_;       //读取频率
+    size_t fetch_min_bytes_;   //最小读取字节数，与fetch_wait_max_ms_配合使用
 
     // std::vector<std::string> subs_{};
     // int partitions_{0};
