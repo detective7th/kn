@@ -6,7 +6,8 @@ ENV PATH=/usr/local/bin:/usr/bin:$PATH
 
 RUN pacman -Syyu --noconfirm
 RUN pacman -S --noconfirm git gcc cmake protobuf boost boost-libs double-conversion google-glog snappy jemalloc libaio \
-    	      		  libsodium libunwind libdwarf libevent gmock rapidjson librdkafka gtest gflags fmt make which grpc
+    	      		  libsodium libunwind libdwarf libevent gmock rapidjson librdkafka gtest gflags fmt make which grpc \
+			  icu liburing libffi python gflags
 
 RUN mkdir /data && mkdir /data/3rd
 
@@ -33,15 +34,16 @@ WORKDIR /data/3rd
 RUN rm -rf g3log
 
 RUN git clone https://github.com/KjellKod/g3sinks.git
-WORKDIR /data/3rd/g3sinks/logrotate
-RUN mkdir build && cd build && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
+WORKDIR /data/3rd/g3sinks
+RUN mkdir build && cd build && cmake .. -Wno-dev -DCMAKE_BUILD_TYPE=Release && make -j $(nproc) && make install && ldconfig
 
 WORKDIR /data/3rd
 RUN rm -rf g3sinks
 
 RUN git clone https://github.com/facebook/folly.git
 WORKDIR /data/3rd/folly
-RUN mkdir build_ && cd build_ && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
+RUN git reset --hard v2020.10.05.00 \
+    && mkdir build_ && cd build_ && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
 
 WORKDIR /data/3rd
 RUN git clone https://github.com/HowardHinnant/date.git
@@ -61,6 +63,16 @@ WORKDIR /data/3rd
 RUN git clone https://github.com/yhirose/cpp-httplib.git
 WORKDIR /data/3rd/cpp-httplib
 RUN mkdir build_ && cd build_ && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
+
+WORKDIR /data/3rd
+RUN git clone https://github.com/microsoft/cpprestsdk.git
+WORKDIR /data/3rd/cpprestsdk
+RUN mkdir build && cd build && cmake .. -DCPPREST_EXCLUDE_WEBSOCKETS=ON && make && make install && ldconfig
+
+WORKDIR /data/3rd
+RUN git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git
+WORKDIR /data/3rd/etcd-cpp-apiv3
+RUN mkdir build && cd build && cmake .. && make && make install && ldconfig
 
 WORKDIR /
 RUN rm -rf /data/
