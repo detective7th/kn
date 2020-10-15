@@ -1,4 +1,4 @@
-FROM detective7th/kn_base:latest
+FROM harbor.yijinin.biz/base/kn_base:latest
 MAINTAINER kid.Novalis
 
 ARG build_type=Release
