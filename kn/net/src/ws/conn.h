@@ -26,6 +26,7 @@
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
+#include <random>
 
 namespace kn
 {
@@ -218,6 +219,7 @@ public:
             :StreamEntry<WsStream<WsStreamSSL>>(new WsStream<WsStreamSSL>(ioc, ssl), entry, cmd, subs)
     {
         buffer_.reserve(1 << 18);
+        random_e_.seed(std::chrono::system_clock::now().time_since_epoch().count());
     }
 
     virtual ~Conn() {}
@@ -332,9 +334,13 @@ public:
                2. 只有当ts_now - last_reconnect_ts_相差1分钟以上才能证明上次连接成功是有效的，此时重连失败次数清零。
                3. 重连间隔 按照失败次数累进。
         */
+
         uint64_t intval = 100; //ms
         auto ts_now = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
+
+        std::uniform_int_distribution<uint64_t> range(0, 100);
+        auto range_intval = range(random_e_);
 
         if ((ts_now - last_reconnect_ts_) >= 20*1000)
         {
@@ -347,19 +353,19 @@ public:
         }
         else if(connect_fail_count_ <= 5)
         {
-            Sleep(std::chrono::milliseconds(intval), yield, ec);
+            Sleep(std::chrono::milliseconds((1 + range_intval / 10) * 1 * intval + range_intval % 10), yield, ec);
         }
         else if(connect_fail_count_ <= 10)
         {
-            Sleep(std::chrono::milliseconds(10*intval), yield, ec);
+            Sleep(std::chrono::milliseconds((1 + range_intval / 10) * 10 * intval + range_intval % 10), yield, ec);
         }
         else if(connect_fail_count_ <= 50)
         {
-            Sleep(std::chrono::milliseconds(50*intval), yield, ec);
+            Sleep(std::chrono::milliseconds((1 + range_intval / 10) * 50 * intval + range_intval % 10), yield, ec);
         }
         else
         {
-            Sleep(std::chrono::milliseconds(800*intval), yield, ec);
+            Sleep(std::chrono::milliseconds((1 + range_intval / 10) * 600 * intval + range_intval % 10), yield, ec);
         }
         last_reconnect_ts_ = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
@@ -488,6 +494,7 @@ protected:
     uint64_t last_reconnect_ts_{0};
     uint64_t last_reconnect_succ_ts_{0};
     uint32_t connect_fail_count_{0};
+    std::default_random_engine random_e_;
 };
 
 
@@ -502,6 +509,7 @@ public:
             :StreamEntry<WsStream<WsStreamTCP>>(new WsStream<WsStreamTCP>(ioc), entry, cmd, subs)
     {
         buffer_.reserve(1 << 18);
+        random_e_.seed(std::chrono::system_clock::now().time_since_epoch().count());
     }
 
     virtual ~Conn() {}
@@ -594,9 +602,12 @@ public:
                2. 只有当ts_now - last_reconnect_ts_相差1分钟以上才能证明上次连接成功是有效的，此时重连失败次数清零。
                3. 重连间隔 按照失败次数累进。
         */
-        uint64_t intval = 100; //ms
+       uint64_t intval = 100; //ms
         auto ts_now = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
+
+        std::uniform_int_distribution<uint64_t> range(0, 100);
+        auto range_intval = range(random_e_);
 
         if ((ts_now - last_reconnect_ts_) >= 20*1000)
         {
@@ -609,19 +620,19 @@ public:
         }
         else if(connect_fail_count_ <= 5)
         {
-            Sleep(std::chrono::milliseconds(intval), yield, ec);
+            Sleep(std::chrono::milliseconds((1 + range_intval / 10) * 1 * intval + range_intval % 10), yield, ec);
         }
         else if(connect_fail_count_ <= 10)
         {
-            Sleep(std::chrono::milliseconds(10*intval), yield, ec);
+            Sleep(std::chrono::milliseconds((1 + range_intval / 10) * 10 * intval + range_intval % 10), yield, ec);
         }
         else if(connect_fail_count_ <= 50)
         {
-            Sleep(std::chrono::milliseconds(50*intval), yield, ec);
+            Sleep(std::chrono::milliseconds((1 + range_intval / 10) * 50 * intval + range_intval % 10), yield, ec);
         }
         else
         {
-            Sleep(std::chrono::milliseconds(800*intval), yield, ec);
+            Sleep(std::chrono::milliseconds((1 + range_intval / 10) * 600 * intval + range_intval % 10), yield, ec);
         }
         last_reconnect_ts_ = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
@@ -731,6 +742,7 @@ protected:
     uint64_t last_reconnect_ts_{0};
     uint64_t last_reconnect_succ_ts_{0};
     uint32_t connect_fail_count_{0};
+    std::default_random_engine random_e_;
 };
 
 

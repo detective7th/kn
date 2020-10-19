@@ -127,6 +127,10 @@ public:
     {
         return stream()->poll();
     }
+    inline auto Reads()
+    {
+        return stream()->poll_batch(1000);
+    }
 
     void Close(boost::asio::yield_context& yield, boost::beast::error_code& ec)
     {
