@@ -602,7 +602,7 @@ public:
                2. 只有当ts_now - last_reconnect_ts_相差1分钟以上才能证明上次连接成功是有效的，此时重连失败次数清零。
                3. 重连间隔 按照失败次数累进。
         */
-       uint64_t intval = 100; //ms
+        uint64_t intval = 100; //ms
         auto ts_now = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
 
