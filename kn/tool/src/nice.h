@@ -21,7 +21,7 @@
 
 #pragma once
 #include <sys/resource.h>
-#include <kn/log/logger.h>
+//#include <kn/log/logger.h>
 
 namespace kn
 {
@@ -37,7 +37,7 @@ int SetMaxNice()
     int ret = nice(-20);
     if (errno)
     {
-        G3LOG(ERROR) << "SetMaxNice Failed|" << errno << "|" << strerror(errno);
+        //G3LOG(ERROR) << "SetMaxNice Failed|" << errno << "|" << strerror(errno);
     }
     return ret;
 }

@@ -22,6 +22,7 @@
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <folly/Likely.h>
+#include <kn/log/logger.h>
 
 namespace kn
 {

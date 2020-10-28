@@ -7,7 +7,7 @@ ENV PATH=/usr/local/bin:/usr/bin:$PATH
 RUN pacman -Syyu --noconfirm
 RUN pacman -S --noconfirm git gcc cmake protobuf boost boost-libs double-conversion google-glog snappy jemalloc libaio \
     	      		  libsodium libunwind libdwarf libevent gmock rapidjson librdkafka gtest gflags fmt make which grpc \
-			  icu liburing libffi python gflags
+			  icu liburing libffi python gflags hiredis python-pip npm
 
 RUN mkdir /data && mkdir /data/3rd
 
@@ -43,7 +43,12 @@ RUN rm -rf g3sinks
 RUN git clone https://github.com/facebook/folly.git
 WORKDIR /data/3rd/folly
 RUN git reset --hard v2020.10.05.00 \
-    && mkdir build_ && cd build_ && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
+    && mkdir build_static && cd build_static && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
+
+WORKDIR /data/3rd/folly
+RUN git reset --hard v2020.10.05.00 \
+    && mkdir build_shared && cd build_shared && cmake .. -Wno-dev -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+    && make -j $(nproc) && make install && ldconfig
 
 WORKDIR /data/3rd
 RUN git clone https://github.com/HowardHinnant/date.git
@@ -65,14 +70,14 @@ WORKDIR /data/3rd/cpp-httplib
 RUN mkdir build_ && cd build_ && cmake .. -Wno-dev && make -j $(nproc) && make install && ldconfig
 
 WORKDIR /data/3rd
-RUN git clone https://github.com/microsoft/cpprestsdk.git
+RUN git clone https://github.com/microsoft/cpprestsdk.git --recursive
 WORKDIR /data/3rd/cpprestsdk
-RUN mkdir build && cd build && cmake .. -DCPPREST_EXCLUDE_WEBSOCKETS=ON && make && make install && ldconfig
+RUN mkdir build && cd build && cmake .. && make && make install && ldconfig
 
 WORKDIR /data/3rd
 RUN git clone https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git
 WORKDIR /data/3rd/etcd-cpp-apiv3
-RUN mkdir build && cd build && cmake .. && make && make install && ldconfig
+RUN mkdir build && cd build && cmake .. -DBUILD_SHARED_LIBS=ON && make && make install && ldconfig
 
 WORKDIR /
 RUN rm -rf /data/
