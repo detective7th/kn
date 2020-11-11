@@ -41,11 +41,12 @@ class Server
     static constexpr size_t kRecvBufSize_ = 8 * def::MB;
 public:
     explicit Server(boost::asio::io_context& ioc, const uint16_t& port, ProcFunc func)
-            :socket_(ioc, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port))
+            :socket_(ioc, boost::asio::ip::udp::v4())
             ,func_(std::move(func))
 
     {
         SetOpt();
+        socket_.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port));
         StartRecv();
     }
 
@@ -60,8 +61,23 @@ public:
 protected:
     void SetOpt()
     {
-        boost::asio::socket_base::receive_buffer_size opt_send_buf(kRecvBufSize_);
-        socket_.set_option(opt_send_buf);
+        socket_.set_option(boost::asio::socket_base::receive_buffer_size(kRecvBufSize_));
+        //boost::asio::socket_base::receive_buffer_size test_buf_size;
+        //socket_.get_option(test_buf_size);
+
+        socket_.set_option(boost::asio::socket_base::reuse_address(true));
+        //boost::asio::socket_base::reuse_address test_reuse_address;
+        //socket_.get_option(test_reuse_address);
+
+        socket_.set_option(boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT>(true));
+        //boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> test_reuse_port;
+        //socket_.get_option(test_reuse_port);
+
+        //int one = 1;
+        //setsockopt(socket_.native_handle(), SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &one, sizeof(one));
+
+        //socket_.get_option(test_reuse_address);
+        //socket_.get_option(test_reuseport);
     }
 
     void StartRecv()
